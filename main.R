@@ -36,7 +36,7 @@ countries@data$name_long[countries@data$name_long == "Greenland"] <- "Denmark"
 top_1_wealth_share <- top_shares_dta_wide[-c(1, 2)] %>% 
   unlist() %>% unname()
 
-countries@data$top_1_wealth_share <- top_1_wealth_share[match(countries@data$name_long, country)]*100
+countries@data$top_1_wealth_share <- top_1_wealth_share[match(countries@data$name_long, country_name)]*100
 
 labels <- lapply(ifelse(!(is.na(countries@data$top_1_wealth_share)),
                         sprintf("<strong>%s</strong><br/>Top 1&percnt; wealth share: %g&percnt;",
@@ -60,7 +60,8 @@ map <- leaflet(options = leafletOptions(minZoom = 1.5)) %>%
                 style = list("font-weight" = "normal", padding = "3px 8px"),
                 textsize = "15px",
                 direction = "auto", sticky = FALSE)) %>%
-  addLegend("bottomleft", pal = colorFactors, values = countries@data$top_1_wealth_share)
+  addLegend("bottomleft", pal = colorFactors, values = countries@data$top_1_wealth_share,
+            title = HTML("Top 1% wealth<br/>share in %"))
 
 saveWidget(map, file = "map.html")
 
