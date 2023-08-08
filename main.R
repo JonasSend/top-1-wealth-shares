@@ -1,5 +1,3 @@
-
-
 library(leaflet)
 library(tidyverse)
 library(readxl)
@@ -17,7 +15,6 @@ country_name <- top_shares_dta_wide %>%
   tail(n = -2) %>% 
   sub(pattern=".*\n", replacement="")
 
-# adjust names
 country_name[country_name == "USA"] <- "United States"
 country_name[country_name == "Korea"] <- "Republic of Korea"
 country_name[country_name == "North Korea"] <- "Dem. Rep. Korea"
@@ -30,14 +27,19 @@ country_name[country_name == "Congo"] <- "Republic of the Congo"
 country_name[country_name == "DR Congo"] <- "Democratic Republic of the Congo"
 country_name[country_name == "Swaziland"] <- "Kingdom of eSwatini"
 country_name[country_name == "Viet Nam"] <- "Vietnam"
+
 # add Greenland to Denmark
 countries@data$name_long[countries@data$name_long == "Greenland"] <- "Denmark"
 
+# isolate raw data on top wealth shares
 top_1_wealth_share <- top_shares_dta_wide[-c(1, 2)] %>% 
-  unlist() %>% unname()
+  unlist() %>%
+  unname()
 
+# match wealth data to map
 countries@data$top_1_wealth_share <- top_1_wealth_share[match(countries@data$name_long, country_name)]*100
 
+# labels including no-data disclaimer
 labels <- lapply(ifelse(!(is.na(countries@data$top_1_wealth_share)),
                         sprintf("<strong>%s</strong><br/>Top 1&percnt; wealth share: %g&percnt;",
                          countries@data$name_long, countries@data$top_1_wealth_share),
@@ -45,26 +47,19 @@ labels <- lapply(ifelse(!(is.na(countries@data$top_1_wealth_share)),
                                 countries@data$name_long)),
                  HTML)
 
-colorFactors = colorBin(c("darkblue", "khaki", "darkred"), bins = 10,
+colorFactors = colorBin(c("blue", "khaki", "red"), bins = 50,
                         domain = countries@data$top_1_wealth_share)
 
 map <- leaflet(options = leafletOptions(minZoom = 1.5)) %>%
-  addProviderTiles("Esri.WorldGrayCanvas") %>%
+  addProviderTiles("CartoDB.DarkMatterNoLabels") %>%
   addPolygons(data = countries, 
               fillColor = ~colorFactors(countries@data$top_1_wealth_share), color = "black",
               fillOpacity = 0.8, opacity = 1,
-              weight = .5, highlightOptions = highlightOptions(weight = 3,
-                                                               bringToFront = TRUE),
+              weight = .75, highlightOptions = highlightOptions(weight = 3, bringToFront = TRUE),
               label = labels,
               labelOptions = labelOptions(
                 style = list("font-weight" = "normal", padding = "3px 8px"),
                 textsize = "15px",
-                direction = "auto", sticky = FALSE)) %>%
-  addLegend("bottomleft", pal = colorFactors, values = countries@data$top_1_wealth_share,
-            title = HTML("Top 1% wealth<br/>share in %"))
+                direction = "auto", sticky = FALSE))
 
 saveWidget(map, file = "map.html")
-
-
-
-
